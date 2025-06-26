@@ -2,13 +2,15 @@
 
 ## Masalah yang Diperbaiki
 
-### 1. Error pip install dengan Python 3.12
-**Masalah:** Vercel menggunakan Python 3.12 yang menyebabkan konflik dependency
-**Solusi:** 
-- Mengubah `runtime.txt` ke `python-3.11`
-- Menyederhanakan `requirements.txt` dengan versi yang kompatibel
+### 1. Error `pip install` dengan Python 3.12
+- **Masalah**: Vercel mencoba menggunakan Python 3.12 yang menyebabkan error instalasi dependensi
+- **Solusi**: Mengubah `runtime.txt` ke `python-3.9` dan menggunakan versi dependensi yang stabil
 
-### 2. Struktur File yang Diperbaiki
+### 2. Konfigurasi Vercel yang Deprecated
+- **Masalah**: Penggunaan properti `functions` yang menyebabkan warning dan error
+- **Solusi**: Menggunakan konfigurasi `builds` dengan `@vercel/python`
+
+### 3. Struktur File yang Diperbaiki
 ```
 api/
 └── index.py          # Entry point untuk Vercel
