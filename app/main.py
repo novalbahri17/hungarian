@@ -3,19 +3,29 @@ import os
 import json
 import time
 import traceback
+import sys
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from hungarian import HungarianMethod
-from utils import DataProcessor, Visualizer, FileManager
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for, session
+import flask
+from .hungarian import HungarianMethod
+from .utils import DataProcessor, Visualizer, FileManager
 import tempfile
 import uuid
 from collections import defaultdict
+import logging
 
-from config import Config
+from .config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Configure logging for production
+if not app.debug:
+    logging.basicConfig(level=logging.INFO)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Hungarian Calculator startup')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -49,38 +59,22 @@ def log_activity(action, details=None, user_id=None, username=None):
     print(f"Activity: {action} - {details or 'No details'} - User: {username or 'Anonymous'}")
 
 def get_system_info():
-    """Get system information"""
+    """Get system information - simplified for serverless"""
     try:
-        # Get database size
-        db_path = app.config.get('SQLALCHEMY_DATABASE_URI', '').replace('sqlite:///', '')
-        db_size = 'Unknown'
-        if os.path.exists(db_path):
-            size_bytes = os.path.getsize(db_path)
-            db_size = f"{size_bytes / (1024*1024):.2f} MB"
-        
-        # Get uptime (approximate)
-        uptime_seconds = time.time() - psutil.boot_time()
-        uptime_hours = uptime_seconds / 3600
-        uptime = f"{uptime_hours:.1f} hours"
-        
-        # Get memory usage
-        memory = psutil.virtual_memory()
-        memory_usage = f"{memory.percent}% ({memory.used / (1024**3):.1f}GB / {memory.total / (1024**3):.1f}GB)"
-        
         return {
             'python_version': f"{sys.version.split()[0]}",
             'flask_version': flask.__version__,
-            'database_type': 'SQLite',
-            'uptime': uptime,
-            'memory_usage': memory_usage,
-            'db_size': db_size,
-            'last_backup': None  # Will be implemented with backup functionality
+            'database_type': 'None (Serverless)',
+            'uptime': 'Serverless Function',
+            'memory_usage': 'Managed by Vercel',
+            'db_size': 'N/A',
+            'last_backup': None
         }
     except Exception as e:
         return {
             'python_version': 'Unknown',
             'flask_version': 'Unknown',
-            'database_type': 'SQLite',
+            'database_type': 'None',
             'uptime': 'Unknown',
             'memory_usage': 'Unknown',
             'db_size': 'Unknown',
@@ -410,7 +404,39 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('500.html'), 500
+    # Log the error for debugging
+    app.logger.error(f'Server Error: {error}')
+    app.logger.error(traceback.format_exc())
+    try:
+        return render_template('500.html'), 500
+    except:
+        # Fallback if template rendering fails
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Terjadi kesalahan pada server. Silakan coba lagi.'
+        }), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Log the error for debugging
+    app.logger.error(f'Unhandled Exception: {e}')
+    app.logger.error(traceback.format_exc())
+    
+    # Return JSON error for API requests
+    if request.path.startswith('/api/'):
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Terjadi kesalahan pada server. Silakan coba lagi.'
+        }), 500
+    
+    # Return HTML error for web requests
+    try:
+        return render_template('500.html'), 500
+    except:
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Terjadi kesalahan pada server. Silakan coba lagi.'
+        }), 500
 
 if __name__ == '__main__':
     # Database functionality has been removed from the application
