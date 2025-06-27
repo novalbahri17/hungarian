@@ -2,8 +2,19 @@ import pandas as pd
 import os
 import pandas as pd
 import numpy as np
-# PDF generation removed to reduce bundle size
-# Alternative: Use HTML to PDF conversion or client-side PDF generation
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import seaborn as sns
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
 import io
 import base64
 from typing import List, Dict, Any, Optional
@@ -119,29 +130,38 @@ class Visualizer:
                       col_labels: List[str] = None,
                       assignment: List[tuple] = None) -> str:
         """
-        Membuat representasi sederhana dari matriks biaya (tanpa visualisasi grafis).
+        Membuat heatmap dari matriks biaya menggunakan matplotlib dan seaborn.
         """
         try:
-            # Return simple HTML table representation instead of image
-            html = f"<h3>{title}</h3><table border='1' style='border-collapse: collapse;'>"
+            plt.figure(figsize=(10, 8))
             
-            # Header row
-            html += "<tr><th></th>"
-            for i in range(matrix.shape[1]):
-                label = col_labels[i] if col_labels else f"T{i+1}"
-                html += f"<th style='padding: 5px; background-color: #f0f0f0;'>{label}</th>"
-            html += "</tr>"
+            # Create heatmap
+            ax = sns.heatmap(matrix, 
+                           annot=True, 
+                           fmt='.2f', 
+                           cmap='YlOrRd',
+                           xticklabels=col_labels if col_labels else [f'Task {i+1}' for i in range(matrix.shape[1])],
+                           yticklabels=row_labels if row_labels else [f'Worker {i+1}' for i in range(matrix.shape[0])],
+                           cbar_kws={'label': 'Cost'})
             
-            # Data rows
-            for i, row in enumerate(matrix):
-                row_label = row_labels[i] if row_labels else f"W{i+1}"
-                html += f"<tr><th style='padding: 5px; background-color: #f0f0f0;'>{row_label}</th>"
-                for j, val in enumerate(row):
-                    style = "background-color: #ffcccc;" if assignment and (i, j) in assignment else ""
-                    html += f"<td style='padding: 5px; text-align: center; {style}'>{val:.2f}</td>"
-                html += "</tr>"
-            html += "</table>"
-            return html
+            # Highlight assignment if provided
+            if assignment:
+                for row, col in assignment:
+                    ax.add_patch(plt.Rectangle((col, row), 1, 1, fill=False, edgecolor='blue', lw=3))
+            
+            plt.title(title, fontsize=16, fontweight='bold')
+            plt.xlabel('Tasks', fontsize=12)
+            plt.ylabel('Workers', fontsize=12)
+            plt.tight_layout()
+            
+            # Save to base64 string
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return f"data:image/png;base64,{image_base64}"
             
         except Exception as e:
             print(f"Error creating heatmap: {e}")
@@ -164,26 +184,44 @@ class Visualizer:
     @staticmethod
     def create_complexity_chart(sizes: List[int], times: List[float]) -> str:
         """
-        Membuat tabel analisis kompleksitas sederhana.
+        Membuat grafik analisis kompleksitas menggunakan matplotlib.
         """
         try:
-            html = "<h3>Hungarian Algorithm Complexity Analysis</h3>"
-            html += "<table border='1' style='border-collapse: collapse; margin: 10px 0;'>"
-            html += "<tr><th style='padding: 8px; background-color: #f0f0f0;'>Matrix Size (n)</th>"
-            html += "<th style='padding: 8px; background-color: #f0f0f0;'>Execution Time (seconds)</th>"
-            html += "<th style='padding: 8px; background-color: #f0f0f0;'>Time per Element (ms)</th></tr>"
+            plt.figure(figsize=(10, 6))
             
-            for size, time in zip(sizes, times):
-                time_per_element = (time * 1000) / (size * size) if size > 0 else 0
-                html += f"<tr>"
-                html += f"<td style='padding: 8px; text-align: center;'>{size}</td>"
-                html += f"<td style='padding: 8px; text-align: center;'>{time:.4f}</td>"
-                html += f"<td style='padding: 8px; text-align: center;'>{time_per_element:.2f}</td>"
-                html += f"</tr>"
+            # Plot actual times
+            plt.subplot(1, 2, 1)
+            plt.plot(sizes, times, 'bo-', label='Actual Time', linewidth=2, markersize=8)
+            plt.xlabel('Matrix Size (n)', fontsize=12)
+            plt.ylabel('Execution Time (seconds)', fontsize=12)
+            plt.title('Hungarian Algorithm\nExecution Time', fontsize=14, fontweight='bold')
+            plt.grid(True, alpha=0.3)
+            plt.legend()
             
-            html += "</table>"
-            html += "<p><em>Note: Hungarian Algorithm has O(n³) time complexity</em></p>"
-            return html
+            # Plot theoretical O(n³) comparison
+            plt.subplot(1, 2, 2)
+            if len(times) > 0 and len(sizes) > 0:
+                # Normalize theoretical curve to match first data point
+                theoretical = [(size/sizes[0])**3 * times[0] for size in sizes]
+                plt.plot(sizes, times, 'bo-', label='Actual Time', linewidth=2, markersize=8)
+                plt.plot(sizes, theoretical, 'r--', label='O(n³) Theoretical', linewidth=2)
+            
+            plt.xlabel('Matrix Size (n)', fontsize=12)
+            plt.ylabel('Execution Time (seconds)', fontsize=12)
+            plt.title('Complexity Comparison\nActual vs Theoretical', fontsize=14, fontweight='bold')
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            
+            plt.tight_layout()
+            
+            # Save to base64 string
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return f"data:image/png;base64,{image_base64}"
             
         except Exception as e:
             print(f"Error creating complexity chart: {e}")
@@ -194,41 +232,54 @@ class Visualizer:
                                  assignment: List[tuple] = None,
                                  title: str = "Interactive Cost Matrix") -> str:
         """
-        Membuat heatmap sederhana dengan HTML/CSS.
+        Membuat heatmap interaktif menggunakan Plotly.
         """
         try:
-            html = f"<h3>{title}</h3>"
-            html += "<table border='1' style='border-collapse: collapse; margin: 10px 0;'>"
+            # Create hover text
+            hover_text = []
+            for i in range(matrix.shape[0]):
+                hover_row = []
+                for j in range(matrix.shape[1]):
+                    hover_row.append(f'Worker {i+1}<br>Task {j+1}<br>Cost: {matrix[i][j]:.2f}')
+                hover_text.append(hover_row)
             
-            # Header row
-            html += "<tr><th style='padding: 8px; background-color: #f0f0f0;'></th>"
-            for j in range(matrix.shape[1]):
-                html += f"<th style='padding: 8px; background-color: #f0f0f0;'>T{j+1}</th>"
-            html += "</tr>"
+            # Create the heatmap
+            fig = go.Figure(data=go.Heatmap(
+                z=matrix,
+                text=matrix,
+                texttemplate="%{text:.2f}",
+                textfont={"size": 12},
+                hovertemplate='%{customdata}<extra></extra>',
+                customdata=hover_text,
+                colorscale='Viridis',
+                showscale=True
+            ))
             
-            # Data rows
-            for i, row in enumerate(matrix):
-                html += f"<tr><th style='padding: 8px; background-color: #f0f0f0;'>W{i+1}</th>"
-                for j, val in enumerate(row):
-                    # Color coding based on value (simple heatmap effect)
-                    max_val = np.max(matrix)
-                    min_val = np.min(matrix)
-                    normalized = (val - min_val) / (max_val - min_val) if max_val != min_val else 0
-                    red_intensity = int(255 * normalized)
-                    bg_color = f"rgb({red_intensity}, {255-red_intensity//2}, {255-red_intensity//2})"
-                    
-                    # Highlight assignment
-                    if assignment and (i, j) in assignment:
-                        bg_color = "#4CAF50"  # Green for assignment
-                        val_text = f"★ {val:.2f}"
-                    else:
-                        val_text = f"{val:.2f}"
-                    
-                    html += f"<td style='padding: 8px; text-align: center; background-color: {bg_color};'>{val_text}</td>"
-                html += "</tr>"
+            # Add assignment highlights
+            if assignment:
+                for row, col in assignment:
+                    fig.add_shape(
+                        type="rect",
+                        x0=col-0.5, y0=row-0.5,
+                        x1=col+0.5, y1=row+0.5,
+                        line=dict(color="red", width=3),
+                        fillcolor="rgba(255,0,0,0.1)"
+                    )
             
-            html += "</table>"
-            return html
+            # Update layout
+            fig.update_layout(
+                title=title,
+                xaxis_title="Tasks",
+                yaxis_title="Workers",
+                xaxis=dict(tickmode='array', tickvals=list(range(matrix.shape[1])), 
+                          ticktext=[f'Task {i+1}' for i in range(matrix.shape[1])]),
+                yaxis=dict(tickmode='array', tickvals=list(range(matrix.shape[0])), 
+                          ticktext=[f'Worker {i+1}' for i in range(matrix.shape[0])]),
+                width=600,
+                height=500
+            )
+            
+            return fig.to_html(include_plotlyjs='cdn', div_id="heatmap")
             
         except Exception as e:
             print(f"Error creating interactive heatmap: {e}")
@@ -236,74 +287,123 @@ class Visualizer:
 
 class ReportGenerator:
     """
-    Kelas untuk generate laporan HTML (menggantikan PDF untuk mengurangi ukuran bundle).
+    Kelas untuk generate laporan PDF.
     """
     
     def __init__(self):
-        pass  # No complex initialization needed for HTML generation
+        self.styles = getSampleStyleSheet()
+        self.title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=self.styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center
+        )
         
     def generate_report(self, result: Dict[str, Any], 
                        output_path: str,
                        complexity_data: Dict = None) -> str:
         """
-        Generate laporan HTML (menggantikan PDF untuk mengurangi ukuran bundle).
+        Generate laporan PDF lengkap.
         """
-        from datetime import datetime
+        doc = SimpleDocTemplate(output_path, pagesize=A4)
+        story = []
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Laporan Hungarian Method Assignment</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                h1 {{ text-align: center; color: #333; }}
-                h2 {{ color: #666; border-bottom: 2px solid #ddd; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; }}
-                th {{ background-color: #f2f2f2; }}
-                .info-table {{ max-width: 500px; }}
-            </style>
-        </head>
-        <body>
-            <h1>LAPORAN HUNGARIAN METHOD ASSIGNMENT</h1>
-            
-            <h2>Informasi Umum</h2>
-            <table class="info-table">
-                <tr><th>Tanggal</th><td>{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</td></tr>
-                <tr><th>Tipe Problem</th><td>{'Maksimisasi' if result['is_maximization'] else 'Minimisasi'}</td></tr>
-                <tr><th>Ukuran Matrix</th><td>{len(result['original_matrix'])}x{len(result['original_matrix'][0])}</td></tr>
-                <tr><th>Total Cost/Benefit</th><td>{result['total_cost']:.2f}</td></tr>
-            </table>
-            
-            <h2>Matriks Input Asli</h2>
-            <table>
-                <tr><th></th>{''.join([f'<th>Task {i+1}</th>' for i in range(len(result['original_matrix'][0]))])}</tr>
-                {''.join([f'<tr><th>Worker {i+1}</th>{"".join([f"<td>{val:.2f}</td>" for val in row])}</tr>' for i, row in enumerate(result['original_matrix'])])}
-            </table>
-            
-            <h2>Hasil Penugasan Optimal</h2>
-            <table>
-                <tr><th>Worker</th><th>Task</th><th>Cost</th></tr>
-                {''.join([f'<tr><td>Worker {row+1}</td><td>Task {col+1}</td><td>{result["original_matrix"][row][col]:.2f}</td></tr>' for row, col in result['assignment']])}
-            </table>
-            
-            {f'''
-            <h2>Analisis Kompleksitas</h2>
-            <table class="info-table">
-                <tr><th>Kompleksitas Teoritis</th><td>O(n³)</td></tr>
-                <tr><th>Waktu Eksekusi Rata-rata</th><td>{complexity_data.get('avg_time', 0):.4f} detik</td></tr>
-                <tr><th>Ukuran Matrix Terbesar Diuji</th><td>{complexity_data.get('max_size', 0)}x{complexity_data.get('max_size', 0)}</td></tr>
-                <tr><th>Cyclomatic Complexity</th><td>{complexity_data.get('cyclomatic', 'N/A')}</td></tr>
-            </table>
-            ''' if complexity_data else ''}
-        </body>
-        </html>
-        """
+        # Title
+        title = Paragraph("LAPORAN HUNGARIAN METHOD ASSIGNMENT", self.title_style)
+        story.append(title)
+        story.append(Spacer(1, 20))
         
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
+        # Info umum
+        info_data = [
+            ['Tanggal', datetime.now().strftime('%d/%m/%Y %H:%M:%S')],
+            ['Tipe Problem', 'Maksimisasi' if result['is_maximization'] else 'Minimisasi'],
+            ['Ukuran Matrix', f"{len(result['original_matrix'])}x{len(result['original_matrix'][0])}"],
+            ['Total Cost/Benefit', f"{result['total_cost']:.2f}"]
+        ]
         
+        info_table = Table(info_data)
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(info_table)
+        story.append(Spacer(1, 20))
+        
+        # Original Matrix
+        story.append(Paragraph("MATRIKS INPUT ASLI", self.styles['Heading2']))
+        original_matrix = result['original_matrix']
+        matrix_data = [[''] + [f'Task {i+1}' for i in range(len(original_matrix[0]))]]
+        for i, row in enumerate(original_matrix):
+            matrix_data.append([f'Worker {i+1}'] + [f'{val:.2f}' for val in row])
+            
+        matrix_table = Table(matrix_data)
+        matrix_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(matrix_table)
+        story.append(Spacer(1, 20))
+        
+        # Assignment Results
+        story.append(Paragraph("HASIL PENUGASAN OPTIMAL", self.styles['Heading2']))
+        assignment_data = [['Worker', 'Task', 'Cost']]
+        for i, (row, col) in enumerate(result['assignment']):
+            cost = original_matrix[row][col]
+            assignment_data.append([f'Worker {row+1}', f'Task {col+1}', f'{cost:.2f}'])
+            
+        assignment_table = Table(assignment_data)
+        assignment_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(assignment_table)
+        story.append(Spacer(1, 20))
+        
+        # Complexity Analysis jika ada
+        if complexity_data:
+            story.append(Paragraph("ANALISIS KOMPLEKSITAS", self.styles['Heading2']))
+            complexity_info = [
+                ['Kompleksitas Teoritis', 'O(n³)'],
+                ['Waktu Eksekusi Rata-rata', f"{complexity_data.get('avg_time', 0):.4f} detik"],
+                ['Ukuran Matrix Terbesar Diuji', f"{complexity_data.get('max_size', 0)}x{complexity_data.get('max_size', 0)}"],
+                ['Cyclomatic Complexity', f"{complexity_data.get('cyclomatic', 'N/A')}"]
+            ]
+            
+            complexity_table = Table(complexity_info)
+            complexity_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            story.append(complexity_table)
+            
+        # Build PDF
+        doc.build(story)
         return output_path
         
 class FileManager:

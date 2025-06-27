@@ -6,8 +6,8 @@ Aplikasi web berbasis Flask yang interaktif untuk menyelesaikan masalah penugasa
 
 ## 🚀 Live Demo
 
-- **GitHub Repository**: [https://github.com/novalbahri17/hungarian](https://github.com/novalbahri17/hungarian)
-- **Vercel Deployment**: Ready for deployment to Vercel
+ inde- **GitHub Repository**: [https://github.com/novalbahri17/hungarian](https://github.com/novalbahri17/hungarian)
+- **Local Development**: Aplikasi berjalan di `http://localhost:5001`
 
 ## 📋 Daftar Isi
 
@@ -16,10 +16,12 @@ Aplikasi web berbasis Flask yang interaktif untuk menyelesaikan masalah penugasa
 - [Instalasi dan Setup](#-instalasi-dan-setup)
 - [Struktur Proyek](#-struktur-proyek)
 - [Penggunaan Aplikasi](#-penggunaan-aplikasi)
+- [Format File CSV](#-format-file-csv)
 - [Algoritma Hungarian Method](#-algoritma-hungarian-method)
 - [Testing](#-testing)
 - [Analisis Kompleksitas](#-analisis-kompleksitas)
-- [API Documentation](#-api-documentation)
+- [Endpoints Aplikasi](#-endpoints-aplikasi)
+- [FAQ & Troubleshooting](#-faq--troubleshooting)
 - [Kontribusi](#-kontribusi)
 - [Lisensi](#-lisensi)
 
@@ -39,22 +41,23 @@ Aplikasi web berbasis Flask yang interaktif untuk menyelesaikan masalah penugasa
 - **Real-time Calculation**: Perhitungan langsung dengan hasil instan
 
 ### 📊 Input Data Fleksibel
-- **Manual Input**: Input matriks secara manual melalui interface
-- **CSV Upload**: Upload file CSV untuk data yang lebih besar
-- **Random Data**: Generate data random untuk testing
+- **Manual Input**: Input matriks secara manual melalui interface web
+- **Random Data Generator**: Generate data random untuk testing dan demonstrasi
 - **Matrix Validation**: Validasi otomatis untuk memastikan data valid
+- **Sample Data**: Tersedia file contoh di folder `data/` untuk referensi format
 
-### 📈 Visualisasi Hasil
+### 📈 Visualisasi dan Laporan
 - **Interactive Tables**: Tabel interaktif untuk menampilkan hasil
+- **Heatmap Visualization**: Visualisasi matriks dalam bentuk heatmap
 - **Step-by-step Process**: Tampilan proses algoritma langkah demi langkah
 - **Assignment Visualization**: Visualisasi hasil penugasan optimal
 - **Cost Analysis**: Analisis biaya total dan individual
 
-### 🚀 Deployment Ready
-- **Vercel Compatible**: Siap deploy ke Vercel dengan konfigurasi otomatis
-- **Serverless Architecture**: Arsitektur serverless untuk skalabilitas
-- **GitHub Integration**: Integrasi dengan GitHub untuk CI/CD
-- **Production Ready**: Konfigurasi production yang optimal
+### 🚀 Development Ready
+- **Local Development**: Mudah dijalankan secara lokal untuk development
+- **Modular Architecture**: Arsitektur modular untuk maintainability
+- **GitHub Integration**: Integrasi dengan GitHub untuk version control
+- **Production Ready**: Konfigurasi yang dapat disesuaikan untuk production
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -74,13 +77,15 @@ Aplikasi web berbasis Flask yang interaktif untuk menyelesaikan masalah penugasa
 - **JavaScript (ES6+)**: Interaktivitas dan AJAX
 - **Bootstrap 5**: Framework CSS untuk UI responsif
 
-### Data Processing
-- **CSV/Excel**: Import/export data menggunakan pandas dan openpyxl
+### Data Processing & Reports
 - **JSON**: Format pertukaran data API
+- **Manual Input**: Input data langsung melalui interface
+- **ReportLab**: Generate laporan PDF
+- **Base64 Encoding**: Untuk visualisasi gambar dalam response
 
-### Deployment
-- **Vercel**: Platform deployment serverless
-- **GitHub**: Version control dan CI/CD
+### Development & Deployment
+- **Local Development**: Flask development server
+- **GitHub**: Version control
 
 ### Testing & Quality
 - **Pytest**: Unit testing dan integration testing (untuk development lokal)
@@ -88,9 +93,7 @@ Aplikasi web berbasis Flask yang interaktif untuk menyelesaikan masalah penugasa
 ## 📁 Struktur Proyek
 
 ```
-hungarian/
-├── api/
-│   └── index.py              # Entry point untuk Vercel
+hungarian3/
 ├── app/
 │   ├── main.py               # Aplikasi Flask utama
 │   ├── config.py             # Konfigurasi aplikasi
@@ -101,39 +104,25 @@ hungarian/
 │       ├── calculator.html   # Interface kalkulator
 │       ├── 404.html          # Error 404
 │       └── 500.html          # Error 500
-├── static/
-│   └── images/               # Asset gambar
 ├── data/
-│   └── *.csv                 # Sample data
+│   ├── sample_input.csv      # Sample data kecil
+│   ├── sample_input_large.csv # Sample data besar
+│   └── sample_unbalanced.csv # Sample data tidak seimbang
 ├── tests/
-│   └── *.py                  # Test files
+│   ├── test_hungarian.py     # Unit tests
+│   └── blackbox_test.py      # Black box tests
 ├── uploads/                  # Upload directory
 ├── reports/                  # Generated reports
 ├── requirements.txt          # Dependencies
-├── vercel.json              # Konfigurasi Vercel
-└── README.md
+├── .env.example             # Environment variables template
+├── .gitignore               # Git ignore rules
+├── CHANGELOG.md             # Change log
+├── CONTRIBUTING.md          # Contribution guidelines
+├── LICENSE                  # License file
+└── README.md                # Dokumentasi ini
 ```
 
 ## 📦 Instalasi dan Setup
-
-### Deployment ke Vercel
-
-1. **Fork atau Clone Repository**
-   ```bash
-   git clone https://github.com/novalbahri17/hungarian.git
-   cd hungarian
-   ```
-
-2. **Deploy ke Vercel**
-   - Login ke [Vercel](https://vercel.com)
-   - Import repository dari GitHub
-   - Vercel akan otomatis mendeteksi konfigurasi dari `vercel.json`
-   - Deploy akan berjalan otomatis
-
-3. **Konfigurasi Vercel**
-   - File `vercel.json` sudah dikonfigurasi untuk Flask
-   - Entry point: `api/index.py`
-   - Environment: Production
 
 ### Menjalankan Secara Lokal
 
@@ -141,17 +130,35 @@ hungarian/
    - Python 3.8 atau lebih tinggi
    - pip (Python package installer)
 
-2. **Install Dependencies**
+2. **Clone Repository**
+   ```bash
+   git clone https://github.com/novalbahri17/hungarian.git
+   cd hungarian3
+   ```
+
+3. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Jalankan Aplikasi**
+4. **Konfigurasi Environment (Opsional)**
    ```bash
+   # Copy file environment template
+   cp .env.example .env
+   # Edit .env sesuai kebutuhan
+   ```
+
+5. **Jalankan Aplikasi**
+   ```bash
+   # Menggunakan Flask CLI
+   set FLASK_APP=app.main:app
+   flask run --host=0.0.0.0 --port=5001
+   
+   # Atau langsung dengan Python
    python app/main.py
    ```
 
-4. **Akses Aplikasi**
+6. **Akses Aplikasi**
    - Buka browser dan kunjungi: `http://localhost:5001`
    - Interface kalkulator tersedia di halaman utama
 
@@ -159,8 +166,7 @@ hungarian/
 
 ### 1. Input Data Matriks
 - **Manual Input**: Klik "Generate Matrix" dan masukkan ukuran matriks, lalu isi nilai secara manual
-- **Upload CSV**: Gunakan tombol "Upload CSV" untuk mengupload file data
-- **Random Data**: Klik "Fill Random Data" untuk mengisi matriks dengan data acak
+- **Random Data**: Klik "Fill Random Data" untuk mengisi matriks dengan data acak untuk testing
 
 ### 2. Menjalankan Algoritma
 - Klik tombol "Hitung Solusi" untuk menjalankan Hungarian Method
@@ -174,94 +180,85 @@ hungarian/
 ### 4. Reset
 - Gunakan tombol "Reset" untuk membersihkan semua data dan memulai dari awal
 
+## 📄 Format Data Sample
+
+Untuk referensi format data, tersedia file sample di folder `data/`:
+
+### Format Data:
+- **Format**: CSV dengan separator koma (,)
+- **Structure**: Matriks numerik tanpa header
+- **Usage**: Sebagai referensi untuk input manual
+
+### Contoh Format Data:
+```csv
+4,2,8
+2,4,1
+8,2,4
+```
+
+### File Sample Tersedia:
+Tersedia file contoh di folder `data/` untuk referensi:
+- `sample_input.csv`: Matriks 3x3 sederhana
+- `sample_input_large.csv`: Matriks yang lebih besar
+- `sample_unbalanced.csv`: Matriks tidak seimbang (akan diseimbangkan otomatis)
+
+**Catatan**: 
+- File sample ini digunakan sebagai referensi format untuk input manual di interface kalkulator
+- Endpoint upload file (`/api/upload`) tersedia di backend untuk pengembangan masa depan, tetapi saat ini interface web hanya mendukung input manual dan generate random data
+
 ## 🔧 Konfigurasi
 
 ### File Konfigurasi
 - `app/config.py`: Konfigurasi aplikasi Flask
-- `vercel.json`: Konfigurasi deployment Vercel
 - `requirements.txt`: Dependencies Python
+- `.env.example`: Template untuk environment variables
+- `.gitignore`: File dan folder yang diabaikan Git
 
 ### Environment Variables
 - `FLASK_ENV`: Environment aplikasi (development/production)
+- `FLASK_APP`: Entry point aplikasi Flask
 - Tidak memerlukan database atau API key eksternal
 
-## 📁 Struktur Proyek
 
-```
-hungarian3/
-├── app/
-│   ├── main.py                 # Entry point aplikasi Flask
-│   ├── hungarian.py            # Implementasi algoritma Hungarian
-│   ├── utils.py                # Fungsi bantu (I/O, visualisasi, laporan)
-│   ├── models.py               # Model database SQLAlchemy
-│   ├── config.py               # Konfigurasi aplikasi
-│   ├── templates/              # Template HTML
-│   │   ├── base.html          # Template dasar
-│   │   ├── index.html         # Landing page
-│   │   ├── login.html         # Halaman login
-│   │   ├── register.html      # Halaman registrasi
-│   │   ├── dashboard.html     # Dashboard pengguna
-│   │   ├── calculator.html    # Kalkulator Hungarian
-│   │   ├── history.html       # Riwayat perhitungan
-│   │   └── admin.html         # Dashboard admin
-│   └── static/                # File statis (CSS, JS, images)
-├── tests/
-│   ├── test_hungarian.py      # Unit tests (White Box)
-│   ├── blackbox_test.py       # Functional tests (Black Box)
-│   └── coverage_report/       # Laporan coverage
-├── reports/                   # Laporan PDF yang dihasilkan
-├── data/                      # Data sample dan uploads
-│   └── sample_input.csv
-├── requirements.txt           # Dependencies Python
-└── README.md                  # Dokumentasi ini
-```
 
 ## 🎮 Penggunaan Aplikasi
 
-### 1. Registrasi dan Login
-- Akses halaman utama aplikasi
-- Klik "Register" untuk membuat akun baru
-- Atau login dengan akun yang sudah ada
-- Admin dapat mengakses dashboard admin
-
-### 2. Menggunakan Kalkulator Hungarian
+### 1. Menggunakan Kalkulator Hungarian
 
 #### Input Manual:
-1. Pilih "Manual Input" di halaman calculator
-2. Tentukan ukuran matriks (rows x columns)
-3. Isi nilai-nilai matriks
+1. Akses halaman utama aplikasi
+2. Klik "Generate Matrix" dan tentukan ukuran matriks
+3. Isi nilai-nilai matriks secara manual
 4. Pilih tipe problem (Minimization/Maximization)
-5. Klik "Calculate Assignment"
+5. Klik "Hitung Solusi"
 
-#### Upload File:
-1. Pilih "File Upload" di halaman calculator
-2. Upload file CSV atau Excel
-3. Preview data yang diupload
-4. Pilih tipe problem
-5. Klik "Calculate Assignment"
+#### Generate Random Data:
+1. Klik "Fill Random Data" untuk mengisi matriks dengan data acak
+2. Pilih tipe problem (Minimisasi/Maksimisasi)
+3. Klik "Hitung Solusi"
 
-### 3. Melihat Hasil
-- **Summary**: Ringkasan solusi optimal
-- **Assignment**: Tabel penugasan worker-task
-- **Total Cost/Profit**: Nilai optimal
+#### Menggunakan Sample Data:
+1. Gunakan file contoh dari folder `data/` sebagai referensi
+2. Salin nilai dari file sample dan input secara manual ke interface
+3. Pilih tipe problem
+4. Klik "Hitung Solusi"
+
+### 2. Melihat Hasil
+- **Assignment Table**: Tabel penugasan optimal
+- **Total Cost**: Biaya total minimum/maksimum
 - **Execution Time**: Waktu komputasi
-- **Heatmap**: Visualisasi matriks
-- **Steps**: Langkah-langkah detail algoritma
+- **Step-by-step Process**: Langkah-langkah detail algoritma
 
-### 4. Generate Laporan
+### 3. Generate Laporan
 - Klik "Generate PDF Report" setelah perhitungan
 - Laporan berisi:
   - Input data dan parameter
   - Hasil optimal
   - Visualisasi step-by-step
   - Analisis kompleksitas
-  - Kesimpulan
 
-### 5. Analisis Kompleksitas
-- Akses melalui dashboard atau menu
-- Pilih range ukuran matriks untuk dianalisis
-- Lihat grafik waktu eksekusi vs ukuran input
-- Download laporan analisis
+### 4. Reset
+- Gunakan tombol "Reset" untuk membersihkan semua data dan memulai dari awal
 
 ## 🧮 Algoritma Hungarian Method
 
@@ -393,15 +390,9 @@ coverage html  # Generate HTML report
 ### Pengukuran Praktis
 
 #### Menjalankan Analisis
-```bash
-# Melalui web interface
-# Akses Dashboard → Complexity Analysis
-
-# Atau melalui API
-curl -X POST http://localhost:5000/api/analyze_complexity \
-  -H "Content-Type: application/json" \
-  -d '{"min_size": 3, "max_size": 15, "step": 2}'
-```
+- Analisis kompleksitas dapat dilakukan melalui testing
+- Gunakan script test untuk mengukur performa pada berbagai ukuran matriks
+- Hasil dapat dilihat melalui output console atau log file
 
 #### Metrics yang Diukur
 1. **Execution Time**: Waktu total eksekusi
@@ -421,188 +412,50 @@ curl -X POST http://localhost:5000/api/analyze_complexity \
 - **memory_profiler**: Monitoring penggunaan memori
 - **radon**: Analisis cyclomatic complexity
 
-## 🔌 API Documentation
+## 🔌 Endpoints Aplikasi
 
-### Authentication Endpoints
+Aplikasi ini menggunakan Flask dengan routing sederhana:
 
-#### POST /api/login
-Login pengguna
+### Main Routes
+- **GET /**: Halaman utama dengan interface kalkulator
+- **GET /calculator**: Interface kalkulator Hungarian Method
+- **GET /dashboard**: Dashboard aplikasi
+- **POST /api/solve**: Endpoint untuk menyelesaikan assignment problem
+- **POST /api/get_steps**: Endpoint untuk melihat langkah-langkah detail
+- **POST /api/generate_report**: Endpoint untuk generate PDF report
+- **GET /api/complexity_analysis**: Endpoint untuk analisis kompleksitas
+- **POST /api/upload**: Endpoint untuk upload file (tersedia untuk pengembangan masa depan)
 
-**Request:**
+### Response Format
+Semua endpoint menggunakan format JSON response:
 ```json
 {
-  "username": "string",
-  "password": "string"
+  "success": true/false,
+  "message": "Status message",
+  "data": {...}
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "is_admin": true
-  }
-}
-```
+## ❓ FAQ & Troubleshooting
 
-### Hungarian Algorithm Endpoints
+### Masalah Umum
 
-#### POST /api/solve
-Menyelesaikan assignment problem
+**Q: Aplikasi tidak bisa dijalankan?**
+A: Pastikan semua dependencies sudah terinstall dengan `pip install -r requirements.txt`
 
-**Request:**
-```json
-{
-  "matrix": [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-  "is_maximization": false,
-  "save_to_history": true
-}
-```
+**Q: Error saat upload CSV?**
+A: Pastikan format CSV sesuai (tanpa header, separator koma, data numerik)
 
-**Response:**
-```json
-{
-  "success": true,
-  "assignment": [0, 1, 2],
-  "total_cost": 15,
-  "execution_time": 0.001234,
-  "steps": [
-    {
-      "step": 1,
-      "description": "Original matrix",
-      "matrix": [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    }
-  ],
-  "calculation_id": 123
-}
-```
+**Q: Hasil tidak sesuai ekspektasi?**
+A: Periksa apakah tipe problem (minimization/maximization) sudah benar
 
-#### POST /api/upload
-Upload dan proses file matriks
+**Q: Matriks tidak persegi?**
+A: Aplikasi akan otomatis menyeimbangkan matriks dengan menambah dummy rows/columns
 
-**Request:** Multipart form dengan file
-
-**Response:**
-```json
-{
-  "success": true,
-  "matrix": [[1, 2, 3], [4, 5, 6]],
-  "rows": 2,
-  "cols": 3,
-  "preview": "2x3 matrix uploaded successfully"
-}
-```
-
-### Analysis Endpoints
-
-#### POST /api/analyze_complexity
-Analisis kompleksitas algoritma
-
-**Request:**
-```json
-{
-  "min_size": 3,
-  "max_size": 15,
-  "step": 2,
-  "iterations": 5
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "analysis_data": [
-    {
-      "size": 3,
-      "avg_time": 0.001,
-      "memory_usage": 1024,
-      "iterations": 2
-    }
-  ],
-  "complexity_curve": "O(n^3)",
-  "chart_data": {...}
-}
-```
-
-#### GET /api/steps/{calculation_id}
-Mendapatkan langkah-langkah detail perhitungan
-
-**Response:**
-```json
-{
-  "success": true,
-  "steps": [
-    {
-      "step": 1,
-      "description": "Row reduction",
-      "matrix": [[0, 1, 2], [0, 1, 2], [0, 1, 2]],
-      "explanation": "Subtract minimum value from each row"
-    }
-  ]
-}
-```
-
-### Report Endpoints
-
-#### POST /api/generate_report
-Generate PDF report
-
-**Request:**
-```json
-{
-  "calculation_id": 123,
-  "include_steps": true,
-  "include_analysis": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "report_url": "/reports/calculation_123_report.pdf",
-  "filename": "hungarian_report_2024.pdf"
-}
-```
-
-### History Endpoints
-
-#### GET /api/history
-Mendapatkan riwayat perhitungan pengguna
-
-**Query Parameters:**
-- `page`: Nomor halaman (default: 1)
-- `per_page`: Item per halaman (default: 10)
-- `type`: Filter tipe (minimization/maximization)
-- `search`: Pencarian
-
-**Response:**
-```json
-{
-  "success": true,
-  "calculations": [
-    {
-      "id": 123,
-      "created_at": "2024-01-01T10:00:00Z",
-      "matrix_size": "3x3",
-      "problem_type": "minimization",
-      "total_cost": 15,
-      "execution_time": 0.001234
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "pages": 5,
-    "per_page": 10,
-    "total": 50
-  }
-}
-```
+### Performance Tips
+- Untuk matriks besar (>20x20), proses mungkin membutuhkan waktu lebih lama
+- Gunakan data sample untuk testing awal
+- Monitor penggunaan memori untuk matriks sangat besar
 
 ## 🤝 Kontribusi
 
@@ -643,7 +496,9 @@ Proyek ini dilisensikan di bawah MIT License - lihat file [LICENSE](LICENSE) unt
 - Terima kasih kepada komunitas open source
 - Bootstrap untuk framework CSS yang excellent
 - Flask untuk framework web yang powerful
-- Vercel untuk platform deployment yang mudah
+- NumPy dan Pandas untuk komputasi numerik yang efisien
+- Matplotlib, Seaborn, dan Plotly untuk visualisasi data
+- ReportLab untuk pembuatan laporan PDF
 
 ---
 

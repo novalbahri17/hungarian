@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for, session
+from werkzeug.utils import secure_filename
 import flask
 from .hungarian import HungarianMethod
 from .utils import DataProcessor, Visualizer, FileManager
@@ -15,6 +16,13 @@ import tempfile
 import uuid
 from collections import defaultdict
 import logging
+
+# ReportLab imports for PDF generation
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 
 from .config import Config
 
@@ -209,49 +217,65 @@ def generate_report():
         
         # Generate unique filename
         timestamp = int(time.time())
-        filename = f'hungarian_report_{timestamp}.html'
+        filename = f'hungarian_report_{timestamp}.pdf'
         output_path = os.path.join(reports_dir, filename)
         
+        # Create PDF report using reportlab
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
         from datetime import datetime
         
-        # Create HTML report
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Laporan Hungarian Method</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                h1 {{ text-align: center; color: #333; }}
-                h2 {{ color: #666; border-bottom: 2px solid #ddd; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; }}
-                th {{ background-color: #f2f2f2; }}
-                .info {{ margin: 10px 0; }}
-            </style>
-        </head>
-        <body>
-            <h1>LAPORAN HUNGARIAN METHOD</h1>
-            
-            <div class="info">
-                <strong>Tanggal:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
-            </div>
-            
-            {f'<div class="info"><strong>Total Cost:</strong> {data["total_cost"]}</div>' if 'total_cost' in data else ''}
-            
-            {f'''
-            <h2>Hasil Penugasan</h2>
-            <table>
-                <tr><th>Worker</th><th>Task</th></tr>
-                {"".join([f"<tr><td>Worker {row+1}</td><td>Task {col+1}</td></tr>" for row, col in data['assignment']])}
-            </table>
-            ''' if 'assignment' in data and data['assignment'] else ''}
-        </body>
-        </html>
-        """
+        doc = SimpleDocTemplate(output_path, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
         
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        title = Paragraph("LAPORAN HUNGARIAN METHOD", title_style)
+        story.append(title)
+        
+        # Date info
+        date_info = Paragraph(f"<b>Tanggal:</b> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", styles['Normal'])
+        story.append(date_info)
+        story.append(Spacer(1, 12))
+        
+        # Total cost if available
+        if 'total_cost' in data:
+            cost_info = Paragraph(f"<b>Total Cost:</b> {data['total_cost']}", styles['Normal'])
+            story.append(cost_info)
+            story.append(Spacer(1, 12))
+        
+        # Assignment results if available
+        if 'assignment' in data and data['assignment']:
+            story.append(Paragraph("HASIL PENUGASAN", styles['Heading2']))
+            
+            assignment_data = [['Worker', 'Task']]
+            for row, col in data['assignment']:
+                assignment_data.append([f'Worker {row+1}', f'Task {col+1}'])
+            
+            assignment_table = Table(assignment_data)
+            assignment_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            story.append(assignment_table)
+        
+        # Build PDF
+        doc.build(story)
         
         # Return file for download
         return send_file(output_path, as_attachment=True, download_name=filename)
